@@ -5,7 +5,6 @@ export const ADDIS = Object.freeze({ latitude: 9.03, longitude: 38.75, utcOffset
 const radians = Math.PI / 180;
 const dayMs = 86400000;
 const clamp = (value, low = 0, high = 1) => Math.min(high, Math.max(low, value));
-const mix = (a, b, amount) => a + (b - a) * amount;
 
 function smooth(low, high, value) {
   const t = clamp((value - low) / (high - low));
@@ -65,18 +64,14 @@ export function lightState(date) {
   const daylight = smooth(-6, 4, altitude);
   const highSun = smooth(8, 55, altitude);
   const warmth = 1 - smooth(6, 45, altitude);
-  const lamp = 1 - smooth(-6, 0, altitude);
   const progress = clamp((minutes - solar.sunrise) / (solar.sunset - solar.sunrise));
   let phase = 'Daylight';
-  if (altitude < -6) phase = 'Lamplight';
+  if (altitude < -6) phase = 'Night';
   else if (minutes < solar.noon && altitude < 6) phase = 'Sunrise';
   else if (minutes >= solar.noon && altitude < 0) phase = 'Dusk';
   else if (minutes >= solar.noon && altitude < 18) phase = 'Golden hour';
   else if (minutes < solar.noon) phase = 'Morning';
   return {
-    ...solar, minutes, altitude, phase, daylight, warmth, lamp, highSun,
-    sunX: mix(0.14, 0.95, progress),
-    sunY: 0.2 - Math.sin(progress * Math.PI) * 0.23,
-    slope: mix(-0.55, 0.55, progress),
+    ...solar, minutes, altitude, phase, daylight, warmth, highSun, progress,
   };
 }

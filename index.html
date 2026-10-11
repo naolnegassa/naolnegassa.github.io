@@ -10,11 +10,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&amp;family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <script src="evening-light.js" type="module"></script>
+  <script src="daylight.js" type="module"></script>
 </head>
 <body>
-  <div class="evening-light" aria-hidden="true">
-    <canvas class="evening-light-canvas"></canvas>
+  <div class="paper-surface" aria-hidden="true">
+    <div class="paper-daylight">
+      <div class="paper-sunlight"></div>
+      <div class="paper-shadows">
+        <span class="paper-shadow paper-shadow-near"></span>
+        <span class="paper-shadow paper-shadow-middle"></span>
+        <span class="paper-shadow paper-shadow-far"></span>
+      </div>
+    </div>
   </div>
   <header class="site-header">
     <div class="shell header-inner">

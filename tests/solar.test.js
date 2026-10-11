@@ -23,26 +23,26 @@ test('solar events adjust seasonally instead of using fixed clock hours', () => 
   assert.ok(june.sunset - june.sunrise > december.sunset - december.sunrise + 50);
 });
 
-test('night has lamplight without sunlight, while noon has daylight without a lamp', () => {
+test('sunlight fades away at night and returns during the day', () => {
   const night = lightState(atMinute(22 * 60));
   const noon = lightState(atMinute(12 * 60 + 30));
-  assert.equal(night.phase, 'Lamplight');
+  assert.equal(night.phase, 'Night');
   assert.equal(night.daylight, 0);
-  assert.equal(night.lamp, 1);
+  assert.equal(night.progress, 1);
   assert.equal(noon.phase, 'Daylight');
   assert.equal(noon.daylight, 1);
-  assert.equal(noon.lamp, 0);
+  assert.ok(noon.progress > 0.4 && noon.progress < 0.6);
 });
 
-test('sunset hands off gradually to lamplight', () => {
+test('sunlight fades gradually through dusk to neutral paper', () => {
   const date = new Date('2026-10-11T12:00:00Z');
   const { sunset } = solarDay(date);
   const before = lightState(atMinute(sunset - 20));
   const during = lightState(atMinute(sunset + 10));
   const after = lightState(atMinute(sunset + 30));
   assert.ok(before.daylight > during.daylight && during.daylight > after.daylight);
-  assert.ok(before.lamp < during.lamp && during.lamp < after.lamp);
-  assert.ok(during.lamp > 0 && during.daylight > 0);
+  assert.ok(during.daylight > 0 && during.daylight < 1);
+  assert.equal(after.daylight, 0);
 });
 
 test('the solar cycle stays continuous across midnight and works in leap years', () => {
@@ -50,7 +50,6 @@ test('the solar cycle stays continuous across midnight and works in leap years',
   const early = lightState(new Date('2028-02-29T21:00:00Z'));
   assert.equal(late.date, '2028-02-29');
   assert.equal(early.date, '2028-03-01');
-  assert.equal(late.lamp, early.lamp);
   assert.equal(late.daylight, early.daylight);
   for (const date of [new Date('2028-02-29T12:00:00Z'), new Date('2028-12-31T23:00:00Z')]) {
     const state = lightState(date);

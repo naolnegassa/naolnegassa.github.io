@@ -24,27 +24,90 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-.evening-light {
+.paper-surface {
   position: fixed;
   inset: 0;
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  /* A quiet, still wash also works without JavaScript or WebGL. */
-  background:
-    radial-gradient(ellipse at 90% 18%, rgba(239, 179, 104, 0.2), transparent 70%),
-    linear-gradient(116deg, transparent 32%, rgba(139, 108, 76, 0.05) 45%, transparent 56%);
+  background: var(--paper);
 }
 
-.evening-light-canvas {
+.paper-surface::after {
+  position: absolute;
+  inset: 0;
+  background: url("assets/paper-grain.svg") repeat;
+  background-size: 256px 256px;
+  mix-blend-mode: multiply;
+  opacity: 0.045;
+  content: "";
+}
+
+.paper-daylight {
+  position: absolute;
+  inset: -25%;
+  opacity: var(--daylight-opacity, 0);
+  transform: translate(var(--light-x, 0%), var(--light-y, 0%)) rotate(var(--light-angle, -18deg));
+  transform-origin: 60% 0%;
+  mask-image: linear-gradient(to bottom, black 0%, black 14%, rgba(0, 0, 0, 0.8) 40%, transparent var(--light-reach, 86%));
+}
+
+.paper-surface[data-ready="true"] .paper-daylight {
+  transition: opacity 60s linear, transform 60s linear;
+}
+
+.paper-sunlight {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 30%, rgba(var(--sun-color, 255, 251, 238), 0.08) 32%,
+    rgba(var(--sun-color, 255, 251, 238), 0.85) 34%,
+    rgba(var(--sun-color, 255, 251, 238), 0.8) 73%,
+    rgba(var(--sun-color, 255, 251, 238), 0.14) 77%, transparent 82%);
+  filter: blur(var(--light-blur, 22px));
+}
+
+.paper-shadows {
+  position: absolute;
+  inset: 0;
+  transform-origin: 60% 0%;
+  animation: curtain-sway 92s ease-in-out infinite;
+}
+
+.paper-shadow {
+  position: absolute;
+  inset: 0;
   display: block;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: opacity 1.8s ease;
+  background: linear-gradient(90deg,
+    transparent 43%, rgba(103, 87, 65, 0.10) 44.6%, rgba(103, 87, 65, 0.10) 46%, transparent 48%,
+    transparent 59%, rgba(103, 87, 65, 0.08) 60.3%, rgba(103, 87, 65, 0.08) 61.6%, transparent 63.8%);
 }
 
-.evening-light.is-ready .evening-light-canvas { opacity: 1; }
+/* Overlapping masks dissolve the same shadow from a defined edge into diffusion. */
+.paper-shadow-near {
+  filter: blur(var(--near-blur, 5px));
+  mask-image: linear-gradient(to bottom, black 0%, black 18%, transparent 52%);
+}
+
+.paper-shadow-middle {
+  filter: blur(var(--middle-blur, 18px));
+  mask-image: linear-gradient(to bottom, transparent 12%, black 45%, transparent 82%);
+}
+
+.paper-shadow-far {
+  filter: blur(var(--far-blur, 42px));
+  mask-image: linear-gradient(to bottom, transparent 40%, black 82%);
+}
+
+.paper-surface[data-daylight="false"] .paper-shadows,
+.paper-surface[data-paused="true"] .paper-shadows { animation-play-state: paused; }
+
+@keyframes curtain-sway {
+  0%, 100% { transform: translateX(-3px) skewX(-0.12deg); }
+  29% { transform: translateX(2px) skewX(0.08deg); }
+  56% { transform: translateX(5px) skewX(0.18deg); }
+  81% { transform: translateX(-1px) skewX(-0.04deg); }
+}
 
 ::selection { color: var(--paper); background: var(--ink); }
 
@@ -325,8 +388,7 @@ h1 {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #bb8a4b;
-  box-shadow: 0 0 9px rgba(210, 155, 77, 0.35);
+  background: var(--clock-color, #a7a196);
 }
 
 .clock-time { font-variant-numeric: tabular-nums; }
