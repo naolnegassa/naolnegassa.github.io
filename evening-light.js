@@ -1,3 +1,5 @@
+import { currentLight, onLightChange } from './daylight.js';
+
 (() => {
   const layer = document.querySelector('.evening-light');
   const canvas = layer?.querySelector('canvas');
@@ -30,6 +32,8 @@
     varying vec2 v_uv;
     uniform vec2 u_resolution;
     uniform float u_time;
+    uniform vec4 u_cycle;
+    uniform vec3 u_sun;
 
     float hash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -59,25 +63,30 @@
       // Long, irregular folds project diagonally across the paper.
       float drift = sin(time * 0.10) * 0.035;
       float bend = noise(vec2(p.y * 1.8, time * 0.018)) * 0.08;
-      float across = p.x + p.y * 0.55 + drift + bend;
-      float folds = sin(across * 12.0 + sin(across * 3.1) * 0.7);
+      float across = p.x + p.y * u_sun.z + drift + bend;
+      float folds = sin(across * mix(12.0, 16.0, u_cycle.w) + sin(across * 3.1) * 0.7);
       float curtain = smoothstep(-0.7, 0.85, folds);
 
       // A second, very slow movement keeps the light uneven and organic.
       vec2 breeze = vec2(time * 0.009, sin(time * 0.055) * 0.12);
       float leaves = dapple(p * 3.2 + breeze + vec2(4.3, 2.7));
       float mottling = smoothstep(0.29, 0.73, leaves);
-      float pool = exp(-dot((uv - vec2(0.95, 0.2)) * vec2(0.85, 0.65),
-                           (uv - vec2(0.95, 0.2)) * vec2(0.85, 0.65)) * 2.0);
+      vec2 distance = (uv - u_sun.xy) * vec2(0.85, 0.65);
+      float pool = exp(-dot(distance, distance) * 2.0);
       float light = pool * (0.22 + curtain * 0.40 + mottling * 0.38);
       float shadow = pool * ((1.0 - curtain) * (0.45 + mottling * 0.55)
         + (1.0 - mottling) * 0.42);
 
       vec3 paper = vec3(0.957, 0.945, 0.914);
-      vec3 amber = vec3(1.0, 0.815, 0.565);
+      paper = mix(paper, vec3(0.929, 0.929, 0.925), u_cycle.z);
+      vec3 amber = mix(vec3(1.0, 0.98, 0.88), vec3(1.0, 0.815, 0.565), u_cycle.y);
       vec3 shade = vec3(0.60, 0.55, 0.47);
-      vec3 color = mix(paper, amber, light * 0.38);
-      color = mix(color, shade, shadow * 0.225);
+      vec3 color = mix(paper, amber, light * 0.38 * u_cycle.x);
+      color = mix(color, shade, shadow * 0.225 * u_cycle.x * mix(1.0, 0.65, u_cycle.w));
+      // A steady pool of lamplight takes over as the sun drops below the horizon.
+      vec2 lampDistance = (uv - vec2(0.98, 0.78)) * vec2(1.2, 0.85);
+      float lampPool = exp(-dot(lampDistance, lampDistance) * 3.2);
+      color = mix(color, vec3(1.0, 0.80, 0.49), lampPool * u_cycle.z * 0.32);
       gl_FragColor = vec4(color, 1.0);
     }
   `;
@@ -113,6 +122,11 @@
   gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
   const resolution = gl.getUniformLocation(program, 'u_resolution');
   const time = gl.getUniformLocation(program, 'u_time');
+  const cycleUniform = gl.getUniformLocation(program, 'u_cycle');
+  const sunUniform = gl.getUniformLocation(program, 'u_sun');
+  const values = state => [state.daylight, state.warmth, state.lamp, state.highSun, state.sunX, state.sunY, state.slope];
+  let target = values(currentLight());
+  let current = [...target];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let frame = 0;
   let lastDraw = null;
@@ -121,6 +135,8 @@
 
   function draw() {
     gl.uniform1f(time, elapsed);
+    gl.uniform4fv(cycleUniform, current.slice(0, 4));
+    gl.uniform3fv(sunUniform, current.slice(4));
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
@@ -138,11 +154,20 @@
   }
 
   function animate(now) {
-    frame = requestAnimationFrame(animate);
-    if (lastDraw !== null && now - lastDraw < 1000 / 30) return;
-    if (lastDraw !== null) elapsed += Math.min((now - lastDraw) / 1000, 0.1);
+    if (lastDraw !== null && now - lastDraw < 1000 / 30) {
+      frame = requestAnimationFrame(animate);
+      return;
+    }
+    const delta = lastDraw === null ? 1 / 30 : Math.min((now - lastDraw) / 1000, 0.1);
+    elapsed += delta;
+    const blend = 1 - Math.exp(-delta / 0.22);
+    current = current.map((value, index) => value + (target[index] - value) * blend);
     lastDraw = now;
     draw();
+    // Nighttime lamplight is still; only run frames for daylight or a transition.
+    if (target[0] > 0.001 || current.some((value, index) => Math.abs(target[index] - value) > 0.001)) {
+      frame = requestAnimationFrame(animate);
+    }
   }
 
   function updateMotion() {
@@ -152,6 +177,7 @@
     if (!document.hidden && !reducedMotion.matches) {
       frame = requestAnimationFrame(animate);
     } else if (!document.hidden) {
+      current = [...target];
       draw();
     }
   }
@@ -165,6 +191,10 @@
   window.addEventListener('resize', resize, { passive: true });
   document.addEventListener('visibilitychange', updateMotion);
   reducedMotion.addEventListener('change', updateMotion);
+  onLightChange(state => {
+    target = values(state);
+    updateMotion();
+  });
   resize();
   layer.classList.add('is-ready');
   updateMotion();
