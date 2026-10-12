@@ -180,11 +180,12 @@ nav a:hover::after,
 nav a:focus-visible::after { transform: scaleX(1); transform-origin: left; }
 
 .hero {
-  min-height: calc(100svh - 73px);
-  padding-block: clamp(72px, 14vh, 140px) 42px;
+  min-height: 70svh;
+  padding-block: clamp(56px, 9svh, 96px) 32px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 48px;
 }
 
 .hero-heading { max-width: 850px; animation: enter 850ms 160ms both; }
@@ -236,11 +237,11 @@ h1 {
 
 .section {
   position: relative;
-  padding-block: clamp(88px, 13vw, 150px);
+  padding-block: clamp(64px, 8vw, 96px);
   border-top: 1px solid var(--rule);
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr);
-  gap: 50px;
+  gap: 32px 50px;
 }
 
 .section-label {
@@ -286,17 +287,17 @@ h1 {
 
 .socials a { text-decoration: none; }
 
-#writing { padding-bottom: clamp(100px, 16vw, 180px); }
+#learning { padding-bottom: clamp(64px, 9vw, 104px); }
 
-.writing-head {
-  padding-bottom: 48px;
+.learning-head {
+  padding-bottom: 16px;
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 48px;
+  gap: 32px;
 }
 
-.writing-head > p {
+.learning-head > p {
   max-width: 340px;
   margin-bottom: 4px;
   color: var(--muted);
@@ -306,13 +307,13 @@ h1 {
 .entry-list { grid-column: 2; border-top: 1px solid var(--rule); }
 
 .entry {
-  min-height: 174px;
-  padding-block: 28px;
+  min-height: 112px;
+  padding-block: 24px;
   border-bottom: 1px solid var(--rule);
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) 74px;
-  gap: 30px;
-  align-items: start;
+  grid-template-columns: 150px minmax(0, 1fr) max-content;
+  gap: 24px;
+  align-items: center;
 }
 
 .entry-meta,
@@ -327,7 +328,7 @@ h1 {
 .entry-meta { color: var(--muted); }
 
 .entry-body h3 {
-  margin-bottom: 7px;
+  margin-bottom: 0;
   font-size: clamp(1.55rem, 3vw, 2.1rem);
   font-weight: 400;
   letter-spacing: -0.025em;
@@ -342,10 +343,13 @@ h1 {
 }
 
 .entry-link {
+  min-height: 44px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .site-footer {
@@ -415,8 +419,8 @@ h1 {
   nav { gap: 18px; }
 
   .hero {
-    min-height: calc(100svh - 65px);
-    padding-block: 64px 28px;
+    padding-block: 48px 28px;
+    gap: 40px;
   }
 
   h1 { font-size: clamp(3.35rem, 16vw, 5.2rem); }
@@ -425,24 +429,24 @@ h1 {
   .text-link { justify-self: start; }
 
   .section {
-    padding-block: 76px 92px;
+    padding-block: 56px 64px;
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 28px;
   }
 
   .body-copy { max-width: 560px; }
 
-  .writing-head {
-    padding-bottom: 38px;
+  .learning-head {
+    padding-bottom: 4px;
     display: grid;
-    gap: 24px;
+    gap: 16px;
   }
 
   .entry-list { grid-column: 1; }
 
   .entry {
-    grid-template-columns: 1fr auto;
-    gap: 20px 28px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 20px;
   }
 
   .entry-meta { grid-column: 1 / -1; }
@@ -458,9 +462,6 @@ h1 {
   body { font-size: 17px; }
   .site-name { font-size: 1.12rem; }
   nav a:first-child { display: none; }
-  .hero { min-height: 690px; }
-  .entry { grid-template-columns: 1fr; }
-  .entry-link { width: fit-content; gap: 12px; }
   .footer-inner {
     min-height: 130px;
     padding-block: 28px;
